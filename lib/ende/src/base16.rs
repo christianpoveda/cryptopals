@@ -1,8 +1,8 @@
 use crate::{Decoder, Encoder};
 
-pub struct HexEncoder;
+pub struct Base16Encoder;
 
-impl Encoder for HexEncoder {
+impl Encoder for Base16Encoder {
     fn encode(&self, bytes: &[u8]) -> String {
         bytes
             .iter()
@@ -11,9 +11,9 @@ impl Encoder for HexEncoder {
     }
 }
 
-pub struct HexDecoder;
+pub struct Base16Decoder;
 
-impl Decoder for HexDecoder {
+impl Decoder for Base16Decoder {
     fn decode(&self, string: &str) -> Vec<u8> {
         string
             .chars()

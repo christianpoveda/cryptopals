@@ -1,4 +1,4 @@
-pub mod hex;
+pub mod base16;
 
 pub trait Encoder {
     fn encode(&self, bytes: &[u8]) -> String;
