@@ -1,7 +1,7 @@
 extern crate ende;
 
-use ende::base16::*;
-use ende::{Encoder, Decoder};
+use ende::base16;
+use ende::{Decoder, Encoder};
 
 const DATA: [(u8, char); 16] = [
     (0, '0'),
@@ -25,13 +25,13 @@ const DATA: [(u8, char); 16] = [
 #[test]
 fn single_char_encoding() {
     for &(byte, chr) in &DATA {
-        assert_eq!(Base16Encoder.encode(&[byte]).chars().next().unwrap(), chr);
+        assert_eq!(base16::Encoder.encode(&[byte]).chars().next().unwrap(), chr);
     }
 }
 
 #[test]
 fn single_char_decoding() {
     for &(byte, chr) in &DATA {
-        assert_eq!(Base16Decoder.decode(&chr.to_string())[0], byte);
+        assert_eq!(base16::Decoder.decode(&chr.to_string())[0], byte);
     }
 }

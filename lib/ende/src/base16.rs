@@ -1,8 +1,6 @@
-use crate::{Decoder, Encoder};
+pub struct Encoder;
 
-pub struct Base16Encoder;
-
-impl Encoder for Base16Encoder {
+impl crate::Encoder for Encoder {
     fn encode(&self, bytes: &[u8]) -> String {
         bytes
             .iter()
@@ -11,9 +9,9 @@ impl Encoder for Base16Encoder {
     }
 }
 
-pub struct Base16Decoder;
+pub struct Decoder;
 
-impl Decoder for Base16Decoder {
+impl crate::Decoder for Decoder {
     fn decode(&self, string: &str) -> Vec<u8> {
         string
             .chars()
