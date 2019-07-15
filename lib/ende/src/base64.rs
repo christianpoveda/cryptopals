@@ -34,7 +34,7 @@ impl crate::Encoder for Encoder {
                     CHARS[a.wrapping_shr(2) as usize],
                     CHARS[a.wrapping_shl(6).wrapping_shr(2) as usize],
                     PAD,
-                    PAD
+                    PAD,
                 ],
                 _ => unreachable!(),
             })
@@ -48,6 +48,37 @@ pub struct Decoder;
 
 impl crate::Decoder for Decoder {
     fn decode(&self, string: &str) -> Vec<u8> {
-        unreachable!()
+        string
+            .as_bytes()
+            .chunks(4)
+            .flat_map(|sexts| match sexts {
+                [a, b, PAD, PAD] => {
+                    let a = BYTES[a];
+                    let b = BYTES[b];
+                    vec![a.wrapping_shl(2) + b.wrapping_shr(4)]
+                }
+                [a, b, c, PAD] => {
+                    let a = BYTES[a];
+                    let b = BYTES[b];
+                    let c = BYTES[c];
+                    vec![
+                        a.wrapping_shl(2) + b.wrapping_shr(4),
+                        b.wrapping_shl(4) + c.wrapping_shr(2),
+                    ]
+                }
+                [a, b, c, d] => {
+                    let a = BYTES[a];
+                    let b = BYTES[b];
+                    let c = BYTES[c];
+                    let d = BYTES[d];
+                    vec![
+                        a.wrapping_shl(2) + b.wrapping_shr(4),
+                        b.wrapping_shl(4) + c.wrapping_shr(2),
+                        c.wrapping_shl(6) + d,
+                    ]
+                }
+                _ => unreachable!(),
+            })
+            .collect()
     }
 }

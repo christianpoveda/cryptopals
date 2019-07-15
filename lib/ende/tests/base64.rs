@@ -26,3 +26,27 @@ fn encoding_double_padding() {
         base64::Encoder.encode(b"any carnal pleasure")
     )
 }
+
+#[test]
+fn decoding_no_padding() {
+    assert_eq!(
+        b"any carnal pleasur" as &[u8],
+        &base64::Decoder.decode("YW55IGNhcm5hbCBwbGVhc3Vy") as &[u8]
+    )
+}
+
+#[test]
+fn decoding_single_padding() {
+    assert_eq!(
+        b"any carnal pleasure." as &[u8],
+        &base64::Decoder.decode("YW55IGNhcm5hbCBwbGVhc3VyZS4=") as &[u8]
+    )
+}
+
+#[test]
+fn decoding_double_padding() {
+    assert_eq!(
+        b"any carnal pleasure" as &[u8],
+        &base64::Decoder.decode("YW55IGNhcm5hbCBwbGVhc3VyZQ==") as &[u8]
+    )
+}
