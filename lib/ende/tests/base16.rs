@@ -3,35 +3,34 @@ extern crate ende;
 use ende::base16;
 use ende::{Decoder, Encoder};
 
-const DATA: [(u8, char); 16] = [
-    (0, '0'),
-    (1, '1'),
-    (2, '2'),
-    (3, '3'),
-    (4, '4'),
-    (5, '5'),
-    (6, '6'),
-    (7, '7'),
-    (8, '8'),
-    (9, '9'),
-    (10, 'a'),
-    (11, 'b'),
-    (12, 'c'),
-    (13, 'd'),
-    (14, 'e'),
-    (15, 'f'),
+const DATA: [(u8, &'static str); 15] = [
+    (0x10, "10"),
+    (0x21, "21"),
+    (0x32, "32"),
+    (0x43, "43"),
+    (0x54, "54"),
+    (0x65, "65"),
+    (0x76, "76"),
+    (0x87, "87"),
+    (0x98, "98"),
+    (0xa9, "a9"),
+    (0xba, "ba"),
+    (0xcb, "cb"),
+    (0xdc, "dc"),
+    (0xed, "ed"),
+    (0xfe, "fe")
 ];
 
 #[test]
-fn single_char_encoding() {
-    for &(byte, chr) in &DATA {
-        assert_eq!(base16::Encoder.encode(&[byte]).chars().next().unwrap(), chr);
+fn single_byte_encoding() {
+    for &(byte, string) in &DATA {
+        assert_eq!(base16::Encoder.encode(&[byte]), string);
     }
 }
 
 #[test]
-fn single_char_decoding() {
-    for &(byte, chr) in &DATA {
-        assert_eq!(base16::Decoder.decode(&chr.to_string())[0], byte);
+fn single_byte_decoding() {
+    for &(byte, string) in &DATA {
+        assert_eq!(base16::Decoder.decode(&string), vec![byte]);
     }
 }
