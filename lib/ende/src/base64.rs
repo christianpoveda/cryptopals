@@ -1,6 +1,8 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
+use crate::{Decoder, Encoder};
+
 const CHARS: &'static [u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 lazy_static! {
     static ref BYTES: HashMap<u8, u8> = CHARS
@@ -11,9 +13,9 @@ lazy_static! {
 }
 const PAD: u8 = b'=';
 
-pub struct Encoder;
+pub struct Base64;
 
-impl crate::Encoder for Encoder {
+impl Encoder for Base64 {
     fn encode(&self, bytes: &[u8]) -> String {
         let chars: Vec<u8> = bytes
             .chunks(3)
@@ -44,9 +46,7 @@ impl crate::Encoder for Encoder {
     }
 }
 
-pub struct Decoder;
-
-impl crate::Decoder for Decoder {
+impl Decoder for Base64 {
     fn decode(&self, string: &str) -> Vec<u8> {
         string
             .as_bytes()

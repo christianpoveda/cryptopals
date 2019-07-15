@@ -1,6 +1,6 @@
 extern crate ende;
 
-use ende::base16;
+use ende::base16::Base16;
 use ende::{Decoder, Encoder};
 
 const DATA: [(u8, &'static str); 15] = [
@@ -24,13 +24,13 @@ const DATA: [(u8, &'static str); 15] = [
 #[test]
 fn single_byte_encoding() {
     for &(byte, string) in &DATA {
-        assert_eq!(base16::Encoder.encode(&[byte]), string);
+        assert_eq!(Base16.encode(&[byte]), string);
     }
 }
 
 #[test]
 fn single_byte_decoding() {
     for &(byte, string) in &DATA {
-        assert_eq!(base16::Decoder.decode(&string), vec![byte]);
+        assert_eq!(Base16.decode(&string), vec![byte]);
     }
 }
