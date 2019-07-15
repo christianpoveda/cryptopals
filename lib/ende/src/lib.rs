@@ -9,14 +9,14 @@ pub trait Decoder {
     fn decode(&self, string: &str) -> Vec<u8>;
 }
 
-pub struct Converter<E: Encoder, D: Decoder> {
-    encoder: E,
+pub struct Converter<D: Decoder, E: Encoder> {
     decoder: D,
+    encoder: E,
 }
 
-impl<E: Encoder, D: Decoder> Converter<E, D> {
-    pub fn new(encoder: E, decoder: D) -> Self {
-        Converter { encoder, decoder }
+impl<D: Decoder, E: Encoder> Converter<D, E> {
+    pub fn new(decoder: D, encoder: E) -> Self {
+        Converter { decoder, encoder }
     }
 
     pub fn convert(&self, string: &str) -> String {
