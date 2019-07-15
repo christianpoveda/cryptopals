@@ -1,84 +1,78 @@
 use lazy_static::lazy_static;
-use std::collections::HashMap;
 
-use crate::{Decoder, Encoder};
+use crate::{Decoder, Encoder, EndeError, EndeResult, Table};
 
-const CHARS: &'static [u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const CHARS: Table =
+    Table::Slice(b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 lazy_static! {
-    static ref BYTES: HashMap<u8, u8> = CHARS
-        .iter()
-        .enumerate()
-        .map(|(i, &b)| (b, i as u8))
-        .collect();
+    static ref BYTES: Table<'static> = CHARS.transpose();
 }
+
 const PAD: u8 = b'=';
 
 pub struct Base64;
 
 impl Encoder for Base64 {
-    fn encode(&self, bytes: &[u8]) -> String {
-        let chars: Vec<u8> = bytes
+    fn encode(&self, bytes: &[u8]) -> EndeResult<String> {
+        let chars: EndeResult<Vec<u8>> = bytes
             .chunks(3)
             .flat_map(|octs| match octs {
                 [a, b, c] => vec![
-                    CHARS[a.wrapping_shr(2) as usize],
-                    CHARS[(a.wrapping_shl(6).wrapping_shr(2) + b.wrapping_shr(4)) as usize],
-                    CHARS[(b.wrapping_shl(4).wrapping_shr(2) + c.wrapping_shr(6)) as usize],
-                    CHARS[c.wrapping_shl(2).wrapping_shr(2) as usize],
+                    CHARS.get(a.wrapping_shr(2)),
+                    CHARS.get(a.wrapping_shl(6).wrapping_shr(2) + b.wrapping_shr(4)),
+                    CHARS.get(b.wrapping_shl(4).wrapping_shr(2) + c.wrapping_shr(6)),
+                    CHARS.get(c.wrapping_shl(2).wrapping_shr(2)),
                 ],
                 [a, b] => vec![
-                    CHARS[a.wrapping_shr(2) as usize],
-                    CHARS[(a.wrapping_shl(6).wrapping_shr(2) + b.wrapping_shr(4)) as usize],
-                    CHARS[b.wrapping_shl(4).wrapping_shr(2) as usize],
-                    PAD,
+                    CHARS.get(a.wrapping_shr(2)),
+                    CHARS.get(a.wrapping_shl(6).wrapping_shr(2) + b.wrapping_shr(4)),
+                    CHARS.get(b.wrapping_shl(4).wrapping_shr(2)),
+                    Ok(PAD),
                 ],
                 [a] => vec![
-                    CHARS[a.wrapping_shr(2) as usize],
-                    CHARS[a.wrapping_shl(6).wrapping_shr(2) as usize],
-                    PAD,
-                    PAD,
+                    CHARS.get(a.wrapping_shr(2)),
+                    CHARS.get(a.wrapping_shl(6).wrapping_shr(2)),
+                    Ok(PAD),
+                    Ok(PAD),
                 ],
                 _ => unreachable!(),
             })
             .collect();
 
-        String::from_utf8(chars).unwrap()
+        Ok(String::from_utf8(chars?).unwrap())
     }
 }
 
 impl Decoder for Base64 {
-    fn decode(&self, string: &str) -> Vec<u8> {
-        string
-            .as_bytes()
-            .chunks(4)
-            .flat_map(|sexts| match sexts {
+    fn decode(&self, string: &str) -> EndeResult<Vec<u8>> {
+        let mut bytes = Vec::new();
+        for chunk in string.as_bytes().chunks(4) {
+            match chunk {
                 [a, b, PAD, PAD] => {
-                    let a = BYTES[a];
-                    let b = BYTES[b];
-                    vec![a.wrapping_shl(2) + b.wrapping_shr(4)]
+                    let a = BYTES.get(*a)?;
+                    let b = BYTES.get(*b)?;
+
+                    bytes.push(a.wrapping_shl(2) + b.wrapping_shr(4));
                 }
                 [a, b, c, PAD] => {
-                    let a = BYTES[a];
-                    let b = BYTES[b];
-                    let c = BYTES[c];
-                    vec![
-                        a.wrapping_shl(2) + b.wrapping_shr(4),
-                        b.wrapping_shl(4) + c.wrapping_shr(2),
-                    ]
+                    let a = BYTES.get(*a)?;
+                    let b = BYTES.get(*b)?;
+                    let c = BYTES.get(*c)?;
+                    bytes.push(a.wrapping_shl(2) + b.wrapping_shr(4));
+                    bytes.push(b.wrapping_shl(4) + c.wrapping_shr(2));
                 }
                 [a, b, c, d] => {
-                    let a = BYTES[a];
-                    let b = BYTES[b];
-                    let c = BYTES[c];
-                    let d = BYTES[d];
-                    vec![
-                        a.wrapping_shl(2) + b.wrapping_shr(4),
-                        b.wrapping_shl(4) + c.wrapping_shr(2),
-                        c.wrapping_shl(6) + d,
-                    ]
+                    let a = BYTES.get(*a)?;
+                    let b = BYTES.get(*b)?;
+                    let c = BYTES.get(*c)?;
+                    let d = BYTES.get(*d)?;
+                    bytes.push(a.wrapping_shl(2) + b.wrapping_shr(4));
+                    bytes.push(b.wrapping_shl(4) + c.wrapping_shr(2));
+                    bytes.push(c.wrapping_shl(6) + d);
                 }
-                _ => unreachable!(),
-            })
-            .collect()
+                _ => return Err(EndeError::new(chunk[0], "size does not match")),
+            }
+        }
+        Ok(bytes)
     }
 }

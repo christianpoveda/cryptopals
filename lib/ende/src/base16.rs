@@ -1,40 +1,38 @@
 use lazy_static::lazy_static;
-use std::collections::HashMap;
 
-use crate::{Encoder, Decoder};
+use crate::{Decoder, Encoder, EndeError, EndeResult, Table};
 
-const CHARS: &'static [u8] = b"0123456789abcdef";
+const CHARS: Table = Table::Slice(b"0123456789abcdef");
 lazy_static! {
-    static ref BYTES: HashMap<u8, u8> = CHARS
-        .iter()
-        .enumerate()
-        .map(|(i, &b)| (b, i as u8))
-        .collect();
+    static ref BYTES: Table<'static> = CHARS.transpose();
 }
 
 pub struct Base16;
 
 impl Encoder for Base16 {
-    fn encode(&self, bytes: &[u8]) -> String {
+    fn encode(&self, bytes: &[u8]) -> EndeResult<String> {
         let mut utf8_bytes = Vec::new();
+
         for &byte in bytes {
-            let byte = byte as usize;
-            utf8_bytes.push(CHARS[byte / 16]);
-            utf8_bytes.push(CHARS[byte % 16]);
+            utf8_bytes.push(CHARS.get(byte / 16)?);
+            utf8_bytes.push(CHARS.get(byte % 16)?);
         }
-        String::from_utf8(utf8_bytes).unwrap()
+        Ok(String::from_utf8(utf8_bytes).unwrap())
     }
 }
 
 impl Decoder for Base16 {
-    fn decode(&self, string: &str) -> Vec<u8> {
-        string
-            .as_bytes()
-            .chunks(2)
-            .map(|bytes| match bytes {
-                [a, b] => BYTES[a] * 16 + BYTES[b],
-                _ => unreachable!(),
-            })
-            .collect()
+    fn decode(&self, string: &str) -> EndeResult<Vec<u8>> {
+        let mut bytes = Vec::new();
+
+        for chunk in string.as_bytes().chunks(2) {
+            let a = chunk[0];
+            let b = *chunk
+                .get(1)
+                .ok_or_else(|| EndeError::new(a, "size does not match"))?;
+
+            bytes.push(BYTES.get(a)? * 16 + BYTES.get(b)?);
+        }
+        Ok(bytes)
     }
 }
