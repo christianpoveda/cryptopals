@@ -12,11 +12,37 @@ impl Xor for &[u8] {
     }
 }
 
+impl Xor<u8> for &[u8] {
+    type Output = Vec<u8>;
+
+    fn xor(&self, other: u8) -> Self::Output {
+        self.iter().map(|a| a ^ other).collect()
+    }
+}
+
 impl Xor<&[u8]> for Vec<u8> {
     type Output = Vec<u8>;
 
     #[inline(always)]
     fn xor(&self, other: &[u8]) -> Self::Output {
         (&self as &[u8]).xor(other)
+    }
+}
+
+impl Xor<u8> for Vec<u8> {
+    type Output = Vec<u8>;
+
+    #[inline(always)]
+    fn xor(&self, other: u8) -> Self::Output {
+        (&self as &[u8]).xor(other)
+    }
+}
+
+impl Xor<&[u8]> for u8 {
+    type Output = Vec<u8>;
+
+    #[inline(always)]
+    fn xor(&self, other: &[u8]) -> Self::Output {
+        other.xor(*self)
     }
 }
